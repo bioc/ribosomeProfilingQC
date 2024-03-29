@@ -38,8 +38,8 @@ codonBias(
 }
 \value{
 A list of data frame of codon count table if summary is TRUE.
- Column 'reads' means the counts by raw reads.
- Column 'reference' means the counts by sequence extracted from reference by
+ list 'reads' means the counts by raw reads.
+ list 'reference' means the counts by sequence extracted from reference by
  the coordinates of mapped reads.
  PCR duplicated are not removed for the count table.
  Otherwise, return the counts (reads/reference) table for each reads.

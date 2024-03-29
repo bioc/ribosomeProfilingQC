@@ -12,21 +12,21 @@
 #' @param ... Parameters pass to
 #' \link[txdbmaker:makeTxDbFromGFF]{makeTxDbFromGFF}
 #' @return A list of data frame of codon count table if summary is TRUE.
-#'  Column 'reads' means the counts by raw reads.
-#'  Column 'reference' means the counts by sequence extracted from reference by
+#'  list 'reads' means the counts by raw reads.
+#'  list 'reference' means the counts by sequence extracted from reference by
 #'  the coordinates of mapped reads.
 #'  PCR duplicated are not removed for the count table.
 #'  Otherwise, return the counts (reads/reference) table for each reads.
 #' @importFrom txdbmaker makeTxDbFromGFF
 #' @importFrom BSgenome getSeq
-#' @importFrom Biostrings trinucleotideFrequency
+#' @importFrom Biostrings trinucleotideFrequency GENETIC_CODE AMINO_ACID_CODE
 #' @export
 #' @examples
 #' path <- system.file("extdata", package="ribosomeProfilingQC")
 #' RPFs <- dir(path, "RPF.*?\\.[12].bam$", full.names=TRUE)
 #' gtf <- file.path(path, "Danio_rerio.GRCz10.91.chr1.gtf.gz")
 #' library(BSgenome.Drerio.UCSC.danRer10)
-#' cb <- codonBias(RPFs, gtf=gtf, genome=Drerio)
+#' cb <- codonBias(RPFs[c(1,2)], gtf=gtf, genome=Drerio)
 codonBias <- function(RPFs, gtf, genome,
                       bestpsite=13,
                       readsLen=c(28,29),
@@ -63,9 +63,11 @@ codonBias <- function(RPFs, gtf, genome,
                                 ignore.seqlevelsStyle=ignore.seqlevelsStyle)
     pc <- pc[!is.na(pc$tx_name)]
     if(anchor=="5end"){
-      pc <- pc[pc$posToStop>0 & pc$position + pc$Psite>0]
+      ## -3 is docking position, smaller than that should not be ready
+      pc <- pc[pc$posToStop>=0 & pc$position + pc$Psite>=-3]
     }else{
-      pc <- pc[pc$position>0 & pc$posToStop > pc$Psite]
+      ## P site is stop coden, the transcripts is leaving
+      pc <- pc[pc$position>=0 & pc$posToStop + 3 >= pc$Psite]
     }
     
     ## position, relative position from start codon
@@ -80,6 +82,15 @@ codonBias <- function(RPFs, gtf, genome,
     reads <- substr(pc$seq, seqStart+1, seqStart + seqWidth)
     refReads <- substr(refSeq[pc$tx_name],
                        refStart+1, refStart + seqWidth)
+    ## remove the reads with uncommen length
+    w <- nchar(refReads)
+    k <- w %% 3 == 0
+    reads <- reads[k]
+    refReads <- refReads[k]
+    w <- w[k]
+    ## cut the reads at stop codon
+    reads <- substr(reads, 1, w)
+    # refProb <- translate(DNAStringSet(refReads))
     seqCodonUsage <- trinucleotideFrequency(DNAStringSet(reads), step = 3)
     refCodonUsage <- trinucleotideFrequency(DNAStringSet(refReads), step = 3)
     if(summary){
@@ -95,5 +106,19 @@ codonBias <- function(RPFs, gtf, genome,
     }
   })
   names(res) <- basename(RPFs)
+  if(summary){
+    reshapeData <- function(res, column){
+      dat <- do.call(cbind, lapply(res, function(.ele) .ele[, column]))
+      rn <- rownames(res[[1]]) 
+      dat <- cbind(codon = rn,
+                   AAcodon = GENETIC_CODE[rn],
+                   Abbreviation = AMINO_ACID_CODE[GENETIC_CODE[rn]],
+                   data.frame(dat))
+      dat
+    }
+    reads <- reshapeData(res, 'reads')
+    reference <- reshapeData(res, 'reference')
+    res <- list(reads=reads, reference=reference)
+  }
   res
 }

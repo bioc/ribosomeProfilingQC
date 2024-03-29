@@ -1,3 +1,8 @@
+# CHANGES IN VERSION 1.13.6
+
+* fix a issue in codonUsage.
+* update the summary output for codonBias.
+
 # CHANGES IN VERSION 1.13.5
 
 * add function codonBias.
