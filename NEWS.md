@@ -1,3 +1,7 @@
+# CHANGES IN VERSION 1.13.7
+
+* add parameter removeDuplicates for codonBias.
+
 # CHANGES IN VERSION 1.13.6
 
 * fix a issue in codonUsage.

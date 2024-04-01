@@ -9,13 +9,13 @@
 #' @param anchor 5end or 3end. Default is 5end.
 #' @param ignore.seqlevelsStyle Ignore the sequence name style detection or not.
 #' @param summary Return the summary of codon usage bias or full list.
+#' @param removeDuplicates Remove the PCR duplicates or not. Default TRUE.
 #' @param ... Parameters pass to
 #' \link[txdbmaker:makeTxDbFromGFF]{makeTxDbFromGFF}
 #' @return A list of data frame of codon count table if summary is TRUE.
 #'  list 'reads' means the counts by raw reads.
 #'  list 'reference' means the counts by sequence extracted from reference by
 #'  the coordinates of mapped reads.
-#'  PCR duplicated are not removed for the count table.
 #'  Otherwise, return the counts (reads/reference) table for each reads.
 #' @importFrom txdbmaker makeTxDbFromGFF
 #' @importFrom BSgenome getSeq
@@ -33,6 +33,7 @@ codonBias <- function(RPFs, gtf, genome,
                       anchor="5end",
                       ignore.seqlevelsStyle=FALSE,
                       summary=TRUE,
+                      removeDuplicates = TRUE,
                       ...){
   yieldSize <- 10000000
   stopifnot(is.logical(summary))
@@ -58,6 +59,9 @@ codonBias <- function(RPFs, gtf, genome,
                                             isUnmappedQuery = FALSE,
                                             isNotPassingQualityControls = FALSE,
                                             isSupplementaryAlignment = FALSE)))
+    if(removeDuplicates){
+      pc <- pc[!duplicated(paste(seqnames(pc), start(pc), pc$qwidth))]
+    }
     pc <- pc[pc$qwidth %in% readsLen]
     pc <- shiftReadsByFrame(pc, txdb,
                                 ignore.seqlevelsStyle=ignore.seqlevelsStyle)

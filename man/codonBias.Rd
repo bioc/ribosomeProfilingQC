@@ -13,6 +13,7 @@ codonBias(
   anchor = "5end",
   ignore.seqlevelsStyle = FALSE,
   summary = TRUE,
+  removeDuplicates = TRUE,
   ...
 )
 }
@@ -33,6 +34,8 @@ codonBias(
 
 \item{summary}{Return the summary of codon usage bias or full list.}
 
+\item{removeDuplicates}{Remove the PCR duplicates or not. Default TRUE.}
+
 \item{...}{Parameters pass to
 \link[txdbmaker:makeTxDbFromGFF]{makeTxDbFromGFF}}
 }
@@ -41,7 +44,6 @@ A list of data frame of codon count table if summary is TRUE.
  list 'reads' means the counts by raw reads.
  list 'reference' means the counts by sequence extracted from reference by
  the coordinates of mapped reads.
- PCR duplicated are not removed for the count table.
  Otherwise, return the counts (reads/reference) table for each reads.
 }
 \description{
@@ -53,5 +55,5 @@ path <- system.file("extdata", package="ribosomeProfilingQC")
 RPFs <- dir(path, "RPF.*?\\\\.[12].bam$", full.names=TRUE)
 gtf <- file.path(path, "Danio_rerio.GRCz10.91.chr1.gtf.gz")
 library(BSgenome.Drerio.UCSC.danRer10)
-cb <- codonBias(RPFs, gtf=gtf, genome=Drerio)
+cb <- codonBias(RPFs[c(1,2)], gtf=gtf, genome=Drerio)
 }
