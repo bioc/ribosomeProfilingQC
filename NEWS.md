@@ -1,3 +1,7 @@
+# CHANGES IN VERSION 1.13.8
+
+* update vignettes.
+
 # CHANGES IN VERSION 1.13.7
 
 * add parameter removeDuplicates for codonBias.

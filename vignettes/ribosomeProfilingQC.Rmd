@@ -186,8 +186,66 @@ _ribosomeProfilingQC_ use the bam file mapped to whole genome.
 To get correctly mapped reads, first try to map adaptor trimmed sequences to 
 genome assembly by bowtie2 with following parameters: 
 --local --ma 5 --mp 8,4 --rdg 7,7 --rfg 7,7 --fr --nofw
-and then fileter the reads mapped to rRNA, tRNA, snRNA, snoRNA and misc_RNA 
-from Ensembl and Repeatmasker annotations. After that, map the clean reads to 
+and then filter the reads mapped to rRNA, tRNA, snRNA, snoRNA and misc_RNA 
+from Ensembl and Repeatmasker annotations. _samtools_ will be a great method to filter the reads with following pheudoCode (only works for annotations with `transcript_biotype`).
+
+```{r filter, eval=FALSE}
+bamfilename <- system.file("extdata", "RPF.WT.1.bam",
+                           package="ribosomeProfilingQC")
+bamHeader <- Rsamtools::scanBamHeader(bamfilename)
+(chromsomeNameStyle <- GenomeInfoDb::seqlevelsStyle(names(bamHeader[[1]]$targets)))
+library(rtracklayer)
+## the gtf could be downloaded from https://www.ensembl.org/info/data/ftp/index.html
+## Please make sure the version number are correct.
+## check the version number at https://www.ensembl.org/info/website/archives/index.html
+gtf <- import(system.file("extdata",
+                          "Danio_rerio.GRCz10.91.chr1.gtf.gz",
+                          package="ribosomeProfilingQC"))
+gtf <- gtf[gtf$transcript_biotype %in%
+             c('rRNA', 'tRNA', 'snRNA', 'snoRNA', 'misc_RNA')]
+mcols(gtf) <- NULL
+annotation <- 'danRer10' ## must be UCSC style, eg, GRCm38 should be mm10, GRCh38 should be hg38
+rmsk <- data.table::fread(paste0('https://hgdownload.soe.ucsc.edu/goldenPath/',
+                                annotation, '/database/rmsk.txt.gz'),
+                          header=FALSE)
+colnames(rmsk) <- c('bin', 'swScore', 'milliDiv', 'milliDel', 'milliIns',
+                    'genoName', 'genoStart', 'genoEnd', 'genoLeft', 'strand',
+                    'repName', 'repClass', 'repFamily', 'repStart', 'repEnd',
+                    'repLeft', 'id')
+rmsk_gr <- with(rmsk, GRanges(genoName, IRanges(genoStart+1, genoEnd),
+                              strand = strand))
+# 'UCSC' or 'ensembl', keep same as it in the bam file
+GenomeInfoDb::seqlevelsStyle(gtf) <- seqlevelsStyle(rmsk_gr) <- 
+  chromsomeNameStyle[1]
+gr <- reduce(sort(c(gtf, rmsk_gr)))
+seqlevels(gr, pruning.mode="coarse") <- 
+  intersect(seqlevels(gr), names(bamHeader[[1]]$targets))
+outputBed <- 'unused_regions.bed'
+export(gr, outputBed)
+filteredBamfileName <- sub('.bam$', '.fil.bam', bamfilename)
+unusedBamfileName <- sub('.bam$', '.no_use.bam', bamfilename)
+## run the cmd in terminal or by system/system2
+## please make sure the samtools is available in PATH
+## see more about samtools at https://www.htslib.org/
+(cmd <- paste('samtools view -b -L', outputBed,
+              '-U', filteredBamfileName, 
+              '-o', unusedBamfileName,
+              bamfilename))
+system2('samtools',
+  args = c('view', '-b',
+           '-L', outputBed,
+           '-U', filteredBamfileName,
+           '-o', unusedBamfileName,
+           bamfilename))
+(cmd2 <- paste('samtools bam2fq', filteredBamfileName,
+               '| gzip >', sub('.bam$', '.fq.gz', filteredBamfileName)))
+system2('samtools',
+        args = c('bam2fq', filteredBamfileName,
+               '|', 'gzip', '>', sub('.bam$', '.fq.gz', filteredBamfileName)))
+```
+
+
+After that, map the clean reads to 
 genome assembly by tophat2 with following parameters: 
 --library-type fr-firststrand --transcriptome-index=Transcriptome_data/genome.
 Because the library type of ribo-seq is usally strand-specific, 
