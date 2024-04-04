@@ -423,7 +423,7 @@ simulateRPF <- function(txdb, outPath, genome, samples = 6,
   # seq2 <-as.character(mcols(grn[mcols(grn)$tx %in% "ENSDART00000159144"])$seq)
   # all(seq01==seq2)
   if(!missing(outPath)){
-    dir.create(outPath)
+    dir.create(outPath, recursive = TRUE, showWarnings = FALSE)
     mapply(gl, samples, FUN=function(dat, name){
       tryCatch(
         export(dat, file.path(outPath, paste0(name, ".bam"))),

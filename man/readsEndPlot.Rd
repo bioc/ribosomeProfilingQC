@@ -34,7 +34,7 @@ if fiveEnd set to false, please set the shift as a negative number.}
 \item{ignore.seqlevelsStyle}{Ignore the sequence name style detection or not.}
 }
 \value{
-The invisible counts numbers.
+The invisible list with counts numbers and reads in GRanges.
 }
 \description{
 Plot the reads shifted from start/stop position of CDS.
@@ -56,10 +56,10 @@ library(BSgenome.Drerio.UCSC.danRer10)
 #CDS <- prepareCDS(txdb)
 CDS <- readRDS(system.file("extdata", "CDS.rds",
                            package="ribosomeProfilingQC"))
-readsEndPlot(bamfile, CDS, toStartCodon=TRUE)
-#readsEndPlot(bamfile, CDS, toStartCodon=TRUE, fiveEnd=FALSE)
-#readsEndPlot(bamfile, CDS, toStartCodon=FALSE)
-#readsEndPlot(bamfile, CDS, toStartCodon=FALSE, fiveEnd=FALSE)
+re <- readsEndPlot(bamfile, CDS, toStartCodon=TRUE)
+readsEndPlot(re$reads, CDS, toStartCodon=TRUE, fiveEnd=FALSE)
+#re <- readsEndPlot(bamfile, CDS, toStartCodon=FALSE)
+#readsEndPlot(re$reads, CDS, toStartCodon=FALSE, fiveEnd=FALSE)
 readsEndPlot(bamfile, CDS, shift=13)
 #readsEndPlot(bamfile, CDS, fiveEnd=FALSE, shift=-16)
 }

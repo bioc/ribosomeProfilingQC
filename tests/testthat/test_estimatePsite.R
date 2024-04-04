@@ -38,6 +38,7 @@ test_that("estimatePsite works not correct", {
 test_that("readsEndPlot works not correct", {
   for(psite in possiblePsites){
     h <- readsEndPlot(bamfile[[as.character(psite)]], CDS, toStartCodon=TRUE)
+    h <- h$heights
     dist <- as.numeric(names(h))
     gp <- c(dist[dist<0&dist>-10] %% 3, (dist[dist>0]-1) %% 3)
     gph <- rowsum(h[dist>-10], gp)
@@ -71,8 +72,9 @@ test_that("assignReadingFrame works not correct", {
     m <- table(pcs[[as.character(psite)]]$readingFrame)
     expect_gt(m["0"], m["1"])
     expect_gt(m["0"], m["2"])
-    m <- plotFrameDensity(pcs[[as.character(psite)]])
-    m <- round(m)
+    m0 <- plotFrameDensity(pcs[[as.character(psite)]])
+    m <- round(m0$data$y)
+    names(m) <- m0$data$x
     expect_equal(unname(m['0']), 90, tolerance=1)
     expect_equal(unname(m['1']), 5, tolerance=1)
     expect_equal(unname(m['2']), 5, tolerance=1)

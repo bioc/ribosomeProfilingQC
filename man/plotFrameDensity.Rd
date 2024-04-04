@@ -18,7 +18,7 @@ plotFrameDensity(
 \item{col}{Colors for reading frames}
 }
 \value{
-Reading frame density
+A ggplot object.
 }
 \description{
 Plot density for each reading frame.

@@ -1,3 +1,8 @@
+# CHANGES IN VERSION 1.13.9
+
+* fix the strand issue for readsEndPlot.
+* change the output for multiple functions.
+
 # CHANGES IN VERSION 1.13.8
 
 * update vignettes.

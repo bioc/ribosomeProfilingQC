@@ -3,7 +3,7 @@
 #' @param reads Output of \link{assignReadingFrame}
 #' @param density Plot density or counts
 #' @param col Colors for reading frames
-#' @return Reading frame density
+#' @return A ggplot object.
 #' @importFrom methods as is
 #' @export
 #' @examples
@@ -23,5 +23,4 @@ plotFrameDensity <- function(reads, density=TRUE,
   ggBar(height = data*100, xlab="Frame",
         ylab=ifelse(density, "Relative Read Density (%)", "Read Count"),
         fill = col, postfix = ifelse(density, "%", FALSE))
-  return(invisible(data*100))
 }

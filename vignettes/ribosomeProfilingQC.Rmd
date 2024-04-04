@@ -310,8 +310,8 @@ start position and most of the reads length are 28 nt.
 
 
 ```{r readsEndPlot, fig.height=4, fig.width=6, class.source='vig'}
-readsEndPlot(bamfile, CDS, toStartCodon=TRUE)
-readsEndPlot(bamfile, CDS, toStartCodon=TRUE, fiveEnd=FALSE)
+re <- readsEndPlot(bamfile, CDS, toStartCodon=TRUE)
+readsEndPlot(re$reads, CDS, toStartCodon=TRUE, fiveEnd=FALSE)
 ```
 
 If you see following distribution, that means lots of gene are in
