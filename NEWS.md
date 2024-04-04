@@ -1,3 +1,7 @@
+# CHANGES IN VERSION 1.13.10
+
+* update the codonUsage
+
 # CHANGES IN VERSION 1.13.9
 
 * fix the strand issue for readsEndPlot.

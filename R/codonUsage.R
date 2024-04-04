@@ -25,12 +25,10 @@ codonUsage <- function(reads, start=TRUE, genome){
   }
   if(start){
     reads <- reads[!is.na(reads$position)]
-    reads <- reads[reads$position-3 <= reads$qwidth & reads$position>=-3]
-    reads <- shift(reads, shift = -1*reads$position-1)
+    reads <- reads[reads$position==0]
   }  else {
     reads <- reads[!is.na(reads$posToStop)]
-    reads <- reads[reads$posToStop-3 <= reads$qwidth & reads$posToStop>=-3]
-    reads <- shift(reads, shift = reads$posToStop-1)
+    reads <- reads[reads$posToStop==0]
   }
   reads <- promoters(reads, upstream = 0, downstream = 3)
   seq <- getSeq(genome, reads)
