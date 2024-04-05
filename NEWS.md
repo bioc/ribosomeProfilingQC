@@ -1,3 +1,7 @@
+# CHANGES IN VERSION 1.13.11
+
+* fix the seqlevels style issue for coverageDepth. 
+
 # CHANGES IN VERSION 1.13.10
 
 * update the codonUsage

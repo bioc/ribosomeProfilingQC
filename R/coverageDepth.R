@@ -94,6 +94,8 @@ getCvgs <- function(files, txdb, level,
     reads <- lapply(files, function(f){
       bamfile <- BamFile(file = f, yieldSize = yieldSize)
       pc <- getPsiteCoordinates(bamfile, bestpsite=1)
+      pc <- fixSeqlevelsStyle(pc, txdb,
+                              ignore.seqlevelsStyle=ignore.seqlevelsStyle)
     })
   }
   names(reads) <- basename(sub(".bam", "", files,
