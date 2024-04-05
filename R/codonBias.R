@@ -74,29 +74,24 @@ codonBias <- function(RPFs, gtf, genome,
       pc <- pc[pc$position>=0 & pc$posToStop + 3 >= pc$Psite]
     }
     
+    pc[strand(pc)=='-']$seq <- reverseComplement(pc[strand(pc)=='-']$seq)
+    pc$char <- substring(pc$seq, ifelse(pc$Psite>pc$position, pc$Psite-pc$position, 1))
+    pcs <- ifelse(pc$Psite>pc$position, 0, pc$position-pc$Psite+1)
+    pc$ref <- substr(refSeq[pc$tx_name],
+                     pcs+1,  pcs + nchar(pc$char))
+    pc$char <- substr(pc$char, 1, nchar(pc$ref))
+    
     ## position, relative position from start codon
     ## posToStop, relative position from stop codon
     seqStart <- pc$position %% 3
-    refStart <- pc$position - seqStart
-    k <- refStart<0
-    seqStart[k] <- seqStart[k] - refStart[k]
-    refStart[k] <- 0
     seqWidth <- pc$qwidth - seqStart
     seqWidth <- seqWidth - (seqWidth %% 3)
-    reads <- substr(pc$seq, seqStart+1, seqStart + seqWidth)
-    refReads <- substr(refSeq[pc$tx_name],
-                       refStart+1, refStart + seqWidth)
-    ## remove the reads with uncommen length
-    w <- nchar(refReads)
-    k <- w %% 3 == 0
-    reads <- reads[k]
-    refReads <- refReads[k]
-    w <- w[k]
-    ## cut the reads at stop codon
-    reads <- substr(reads, 1, w)
-    # refProb <- translate(DNAStringSet(refReads))
-    seqCodonUsage <- trinucleotideFrequency(DNAStringSet(reads), step = 3)
-    refCodonUsage <- trinucleotideFrequency(DNAStringSet(refReads), step = 3)
+    
+    pc$char <- substr(pc$char, seqStart+1, seqStart + seqWidth)
+    pc$ref <- substr(pc$ref, seqStart+1, seqStart + seqWidth)
+
+    seqCodonUsage <- trinucleotideFrequency(DNAStringSet(pc$char), step = 3)
+    refCodonUsage <- trinucleotideFrequency(DNAStringSet(pc$ref), step = 3)
     if(summary){
       ## remove the PCR duplicates or not?
       seqCodonUsage <- colSums(seqCodonUsage)

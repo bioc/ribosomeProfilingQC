@@ -1,3 +1,7 @@
+# CHANGES IN VERSION 1.13.12
+
+* update condonBias function. 
+
 # CHANGES IN VERSION 1.13.11
 
 * fix the seqlevels style issue for coverageDepth. 
