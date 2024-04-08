@@ -1,3 +1,7 @@
+# CHANGES IN VERSION 1.13.13
+
+* update translationalEfficiency with shrink method. 
+
 # CHANGES IN VERSION 1.13.12
 
 * update condonBias function. 

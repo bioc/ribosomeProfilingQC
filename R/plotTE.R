@@ -6,10 +6,11 @@
 #' @param xaxis What to plot for x-axis.
 #' @param removeZero Remove the 0 values from plots.
 #' @param log2 Do log2 transform or not.
-#' @param breaks.length Length of breaks for histogram.
-#' @param ... Parameters pass to plot.
-#' @return A invisible data.frame with x, y of points.
-#' @importFrom graphics hist barplot plot
+#' @param type,margins,... Parameters pass to ggMarginal
+#' @return A ggplot object.
+#' @importFrom ggplot2 ggplot geom_point geom_text .data
+#' @importFrom ggExtra ggMarginal
+#' @importFrom stats as.formula coef na.omit
 #' @export
 #' @examples
 #' path <- system.file("extdata", package="ribosomeProfilingQC")
@@ -23,7 +24,9 @@
 #' plotTE(te, 1)
 
 plotTE <- function(TE, sample, xaxis=c("mRNA", "RPFs"),
-                   removeZero=TRUE, log2=TRUE, breaks.length=50, ...){
+                   removeZero=TRUE, log2=TRUE,
+                   type = 'histogram', margins = 'y',
+                   ...){
   if(!is.list(TE)){
     stop("TE must be output of translationalEfficiency.")
   }
@@ -56,29 +59,32 @@ plotTE <- function(TE, sample, xaxis=c("mRNA", "RPFs"),
     x <- x[keep]
     TE <- TE[keep]
   }
+  xlab <- paste(xaxis, "level")
+  ylab <- "Translational Efficiency"
   if(log2){
     x <- log2(x)
     TE <- log2(TE)
+    xlab <- paste('log2 transformed', xlab)
+    ylab <- paste('log2 transformed', ylab)
   }
-  opar <- par(fig=c(0, .75, 0, 1), new=FALSE, mar=c(5.1, 4.1, 4.1, 0))
-  on.exit(par(opar))
-  dots <- list(...)
-  args <- dots
-  args$x <- x
-  args$y <- TE
-  if(length(args$xlab)==0) args$xlab <- paste(xaxis, "level")
-  if(length(args$ylab)==0) args$ylab <- "Translational Efficiency"
-  do.call(plot, args)
-  ylim <- par("usr")[3:4]
-  par(fig=c(.75, 1, 0, 1), new=TRUE, mar=c(5.1, 0, 4.1, 2.1))
-  yhist <- hist(TE, breaks=seq(ylim[1], ylim[2], length.out = breaks.length),
-                plot=FALSE)
-  args <- dots
-  args$height <- yhist$density
-  args$axes <- FALSE
-  args$space <- 0
-  args$horiz <- TRUE
-  args$cex <- NULL
-  do.call(barplot, args)
-  return(invisible(data.frame(x=x, y=TE)))
+  df <- data.frame(x=x, TE=TE)
+  lm_eqn <- function(df){
+    df <- df[!is.infinite(df$x) & !is.infinite(df$TE), , drop=FALSE]
+    m <- lm(as.formula("TE ~ x"), df, na.action = na.omit)
+    eq <- substitute(italic("TE") == a + b %.% italic(x)*","~~italic("r")^2~"="~r2, 
+                     list(a = format(unname(coef(m)[1]), digits = 2),
+                          b = format(unname(coef(m)[2]), digits = 2),
+                          r2 = format(summary(m)$r.squared, digits = 3),
+                          x = xaxis))
+    as.character(as.expression(eq))
+  }
+  p <- ggplot(df, aes(.data$x, .data$TE)) + geom_point() + 
+    xlab(xlab) + ylab(ylab) +
+    geom_smooth(method="lm", se=TRUE)
+  p <- p + geom_text(data=data.frame(),
+                     aes(x=-Inf, y = Inf, label=lm_eqn(df)),
+                     hjust = 0, vjust = 1,
+                     parse = TRUE)
+  p <- ggMarginal(p, type=type, margins=margins, ...)
+  p
 }

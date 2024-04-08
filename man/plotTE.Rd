@@ -10,7 +10,8 @@ plotTE(
   xaxis = c("mRNA", "RPFs"),
   removeZero = TRUE,
   log2 = TRUE,
-  breaks.length = 50,
+  type = "histogram",
+  margins = "y",
   ...
 )
 }
@@ -25,12 +26,10 @@ plotTE(
 
 \item{log2}{Do log2 transform or not.}
 
-\item{breaks.length}{Length of breaks for histogram.}
-
-\item{...}{Parameters pass to plot.}
+\item{type, margins, ...}{Parameters pass to ggMarginal}
 }
 \value{
-A invisible data.frame with x, y of points.
+A ggplot object.
 }
 \description{
 Scatterplot of RNA/RPFs level compared to the

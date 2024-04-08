@@ -107,6 +107,7 @@ R.version
 library(ribosomeProfilingQC)
 library(AnnotationDbi)
 library(Rsamtools)
+library(ggplot2)
 ```
 ## Load genome
 
@@ -681,7 +682,7 @@ It shows a higher value in lowly expressed transcripts
 and a low value in highly expressed transcripts.
 
 ```{r plotTE, class.source='vig'}
-plotTE(TE, sample=2, xaxis="mRNA", log2=TRUE, pch=16, cex=.5)
+plotTE(TE, sample=2, xaxis="mRNA", log2=TRUE, pch=16, cex=.5) + theme_classic()
 #plotTE(TE, sample=2, xaxis="RPFs", log2=TRUE, pch=16, cex=.5)
 ```
 

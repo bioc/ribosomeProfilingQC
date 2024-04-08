@@ -11,7 +11,9 @@ translationalEfficiency(
   mRNAsampleOrder,
   pseudocount = 1,
   log2 = FALSE,
-  normByLibSize = FALSE
+  normByLibSize = FALSE,
+  shrink = FALSE,
+  ...
 )
 }
 \arguments{
@@ -28,9 +30,13 @@ cvgs is corresponding samples.}
 
 \item{log2}{Do log2 transform or not.}
 
-\item{normByLibSize}{Normlization by library size or not.
-If window size is provied and normByLibSize is set to TRUE,
+\item{normByLibSize}{Normalization by library size or not.
+If window size is provided and normByLibSize is set to TRUE,
 the coverage will be normalized by library size.}
+
+\item{shrink}{Shrink the TE or not.}
+
+\item{...}{Parameters will be passed to \code{ash} function from \code{ashr}.}
 }
 \value{
 A list with RPFs, mRNA levels and TE as a matrix with
@@ -38,7 +44,7 @@ translational efficiency
 }
 \description{
 Calculate Translational Efficiency (TE). TE is defined as
-the ratios of the absolute level of ribosome occupancy devided by RNA levels
+the ratios of the absolute level of ribosome occupancy divided by RNA levels
 for transcripts.
 }
 \examples{

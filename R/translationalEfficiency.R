@@ -1,6 +1,6 @@
 #' Translational Efficiency
 #' @description Calculate Translational Efficiency (TE). TE is defined as
-#' the ratios of the absolute level of ribosome occupancy devided by RNA levels
+#' the ratios of the absolute level of ribosome occupancy divided by RNA levels
 #' for transcripts.
 #' @param x Output of \link{getFPKM} or \link{normByRUVs}.
 #' if window is set, it must be output of \link{coverageDepth}.
@@ -10,9 +10,11 @@
 #' cvgs is corresponding samples.
 #' @param pseudocount The number will be add to sum of reads count to avoid X/0.
 #' @param log2 Do log2 transform or not.
-#' @param normByLibSize Normlization by library size or not.
-#' If window size is provied and normByLibSize is set to TRUE,
+#' @param normByLibSize Normalization by library size or not.
+#' If window size is provided and normByLibSize is set to TRUE,
 #' the coverage will be normalized by library size.
+#' @param shrink Shrink the TE or not.
+#' @param ... Parameters will be passed to \code{ash} function from \code{ashr}.
 #' @return A list with RPFs, mRNA levels and TE as a matrix with
 #' translational efficiency
 #' @importFrom IRanges RleList IRanges IRangesList viewSums slidingWindows
@@ -30,16 +32,46 @@
 translationalEfficiency <- function(x, window,
                                     RPFsampleOrder, mRNAsampleOrder,
                                     pseudocount=1, log2=FALSE,
-                                    normByLibSize=FALSE){
+                                    normByLibSize=FALSE,
+                                    shrink=FALSE,
+                                    ...){
   if(!is.list(x)){
-    stop("x must be output of getFPKM or normByRUVs or coverageDepth.")
+    stop("x must be output of getFPKM, normByRUVs or coverageDepth.")
   }
   if(!all(c("RPFs", "mRNA") %in% names(x))){
-    stop("x must be output of getFPKM or normByRUVs or
+    stop("x must be output of getFPKM, normByRUVs or
          coverageDepth and must contain RPFs and mRNA.")
   }
   RPFs <- x[["RPFs"]]
   mRNA <- x[["mRNA"]]
+  shrinkTE <- function(betahat, ...){
+    if (!requireNamespace("ashr", quietly=TRUE)) {
+      stop("type='ashr' requires installing the CRAN package 'ashr'")
+    }
+    
+    message("using 'ashr' for TE shrinkage. ",
+            "If used in published research, ",
+            "please cite: ",
+            " Stephens, M. (2016) False discovery rates: ",
+            "a new deal. Biostatistics, 18:2. ",
+            "https://doi.org/10.1093/biostatistics/kxw041")
+    stopifnot('TE is not a matrix with 2 dimension. Please report this bug.'=
+                length(dim(betahat))==2)
+    betaN <- sqrt(ncol(betahat))
+    sebetahat <- apply(betahat, 1, function(.e) sd(.e)/betaN)
+    fit <- apply(betahat, 2, function(.e){
+      ashr::ash(.e, sebetahat,
+                mixcompdist="normal", method="shrink", ...)},
+      simplify = FALSE)
+    TE <- lapply(fit, function(.e) .e$result$PosteriorMean)
+    TE <- do.call(cbind, TE)
+  }
+  normByLib <- function(x){
+    xLibSize <- lapply(x, sum, na.rm=TRUE)
+    xLibSize <- vapply(xLibSize, sum, FUN.VALUE = 0.0, na.rm=TRUE)
+    xLibFactor <- mean(xLibSize)/xLibSize
+    x <- mapply(x, xLibFactor, FUN=`*`, SIMPLIFY = FALSE)
+  }
   if(missing(window)){
     if(length(dim(RPFs))!=2 | length(dim(mRNA))!=2){
       stop("x must be output of getFPKM or normByRUVs and
@@ -54,9 +86,12 @@ translationalEfficiency <- function(x, window,
     x[["RPFs"]] <- RPFs[id, RPFsampleOrder, drop=FALSE]
     x[["mRNA"]] <- mRNA[id, mRNAsampleOrder, drop=FALSE]
     if(log2){
-      x[["TE"]] <- log2(x[["RPFs"]]+pseudocount)- log2(x[["mRNA"]]+pseudocount)
+      x[["TE"]] <- log2(x[["RPFs"]]+pseudocount) - log2(x[["mRNA"]]+pseudocount)
     }else{
       x[["TE"]] <- (x[["RPFs"]]+pseudocount)/(x[["mRNA"]]+pseudocount)
+    }
+    if(shrink){
+      x[["TE"]] <- shrinkTE(x[["TE"]], ...)
     }
     return(x)
   }else{
@@ -74,14 +109,8 @@ translationalEfficiency <- function(x, window,
            the length of RPFs.")
     }
     if(normByLibSize){
-      mRNALibSize <- lapply(mRNA, sum, na.rm=TRUE)
-      mRNALibSize <- vapply(mRNALibSize, sum, FUN.VALUE = 0.0, na.rm=TRUE)
-      mRNALibFactor <- mean(mRNALibSize)/mRNALibSize
-      mRNA <- mapply(mRNA, mRNALibFactor, FUN=`*`, SIMPLIFY = FALSE)
-      RPFsLibSize <- lapply(RPFs, sum, na.rm=TRUE)
-      RPFsLibSize <- vapply(RPFsLibSize, sum, FUN.VALUE = 0.0, na.rm=TRUE)
-      RPFsLibFactor <- mean(RPFsLibSize)/RPFsLibSize
-      RPFs <- mapply(RPFs, RPFsLibFactor, FUN=`*`, SIMPLIFY = FALSE)
+      mRNA <- normByLib(mRNA)
+      RPFs <- normByLib(RPFs)
     }
     window <- window[1]
     if(round(window)!=window | window < 3){
@@ -136,6 +165,9 @@ translationalEfficiency <- function(x, window,
     x[["RPFs"]] <- do.call(cbind, lapply(cvg, `[[`, i="RPFs"))
     x[["mRNA"]] <- do.call(cbind, lapply(cvg, `[[`, i="mRNA"))
     x[["TE"]] <- do.call(cbind, lapply(cvg, `[[`, i="ratios"))
+    if(shrink){
+      x[["TE"]] <- shrinkTE(x[["TE"]], ...)
+    }
     return(x)
   }
 }
