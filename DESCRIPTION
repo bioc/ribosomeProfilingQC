@@ -27,4 +27,4 @@ Imports: AnnotationDbi, BiocGenerics, Biostrings, BSgenome, EDASeq,
          cluster, stats, graphics, grid, txdbmaker,
          ggExtra
 Suggests: RUnit, BiocStyle, knitr, BSgenome.Drerio.UCSC.danRer10, 
-          edgeR, limma, ashr, testthat, rmarkdown
+          edgeR, DESeq2, limma, ashr, testthat, rmarkdown

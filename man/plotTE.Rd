@@ -18,7 +18,7 @@ plotTE(
 \arguments{
 \item{TE}{Output of \link{translationalEfficiency}}
 
-\item{sample}{character(1). Sample name to plot.}
+\item{sample}{Sample names to plot.}
 
 \item{xaxis}{What to plot for x-axis.}
 
