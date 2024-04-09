@@ -225,7 +225,7 @@ translationalEfficiency <- function(x, window,
       stop("normByRNAseqLevel requires installing the CRAN package 'vsn'")
     }
     x[["ori_TE"]] <- x[["TE"]]
-    x[["TE"]] <- suppressMessages(exprs(vsn::vsn2(x[["TE"]])))
+    x[["TE"]] <- suppressMessages(Biobase::exprs(vsn::vsn2(x[["TE"]])))
     x[["TE"]] <- t(t(x[['TE']])-colMeans(x[['TE']]))
   }
   return(x)
