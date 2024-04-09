@@ -16,13 +16,14 @@ normBy <- function(counts, method = c('edgeR', 'DESeq2', 'RUVs'), ...){
     stop("counts must be output of coutReads.")
   }
   method <- match.arg(method)
-  switch(method,
+  counts <- switch(method,
          edgeR = normByDETools(counts, FUN=edgeRnormHelper),
-         DESEq2 = normByDETools(counts, FUN=DESeq2normHelper),
+         DESeq2 = normByDETools(counts, FUN=DESeq2normHelper),
          RUVs = normByRUVs(counts, ...))
+  counts
 }
 
-normByDETools <- function(count, FUN){
+normByDETools <- function(counts, FUN){
   stopifnot(is.function(FUN))
   if("RPFs" %in% names(counts)){
     counts$RPFsRawCounts <- counts$RPFs
