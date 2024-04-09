@@ -2,7 +2,7 @@
 #' @description Normalization by multiple known methods
 #' @param counts Output of \link{countReads}
 #' @param method Character(1L) to indicate the method for normalization.
-#' @param ... parameters will be passed to \link{normByRUVs}
+#' @param ... parameters will be passed to \link{normByRUVs} or \link{getFPKM}
 #' @return Normalized counts list
 #' @export
 #' @examples
@@ -11,7 +11,8 @@
 #' norm <- normBy(cnts, method = 'edgeR')
 #' norm2 <- normBy(cnts, method = 'DESeq2')
 #' 
-normBy <- function(counts, method = c('edgeR', 'DESeq2', 'RUVs'), ...){
+normBy <- function(counts, method = c('edgeR', 'DESeq2', 'RUVs', 'fpkm'),
+                   ...){
   if(!any(c("RPFs", "mRNA") %in% names(counts))){
     stop("counts must be output of coutReads.")
   }
@@ -19,7 +20,9 @@ normBy <- function(counts, method = c('edgeR', 'DESeq2', 'RUVs'), ...){
   counts <- switch(method,
          edgeR = normByDETools(counts, FUN=edgeRnormHelper),
          DESeq2 = normByDETools(counts, FUN=DESeq2normHelper),
-         RUVs = normByRUVs(counts, ...))
+         RUVs = normByRUVs(counts, ...),
+         fpkm = getFPKM(counts, ...),
+         ashr = )
   counts
 }
 

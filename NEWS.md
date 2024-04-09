@@ -1,3 +1,7 @@
+# CHANGES IN VERSION 1.13.14
+
+* update translationalEfficiency with normalization by RNAseq level method. 
+
 # CHANGES IN VERSION 1.13.13
 
 * update translationalEfficiency with shrink method. 

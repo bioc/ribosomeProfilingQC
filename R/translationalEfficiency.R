@@ -14,6 +14,7 @@
 #' If window size is provided and normByLibSize is set to TRUE,
 #' the coverage will be normalized by library size.
 #' @param shrink Shrink the TE or not.
+#' @param normByRNAseqLevel Normalization the TE by RNAseq expression level or not.
 #' @param ... Parameters will be passed to \code{ash} function from \code{ashr}.
 #' @return A list with RPFs, mRNA levels and TE as a matrix with
 #' translational efficiency
@@ -27,13 +28,14 @@
 #' gtf <- file.path(path, "Danio_rerio.GRCz10.91.chr1.gtf.gz")
 #' cnts <- countReads(RPFs, RNAs, gtf, level="gene")
 #' fpkm <- getFPKM(cnts)
-#' te <- translationalEfficiency(fpkm)
+#' te <- translationalEfficiency(fpkm, normByRNAseqLevel=TRUE)
 #' }
 translationalEfficiency <- function(x, window,
                                     RPFsampleOrder, mRNAsampleOrder,
                                     pseudocount=1, log2=FALSE,
                                     normByLibSize=FALSE,
                                     shrink=FALSE,
+                                    normByRNAseqLevel=FALSE,
                                     ...){
   if(!is.list(x)){
     stop("x must be output of countReads, getFPKM, normByRUVs or coverageDepth.")
@@ -79,7 +81,7 @@ translationalEfficiency <- function(x, window,
     dds <- DESeq2::DESeq(dds)
     res <- DESeq2::results(dds, contrast=c('condition', 'RPFs', 'mRNA'))
     sebetahat <- res$lfcSE
-    betahat <- log2(DESeq2::counts(dds, normalized=TRUE) + 1)
+    betahat <- log2(DESeq2::counts(dds, normalized=TRUE) + pseudocount)
     betahat <- betahat[, seq.int(ncol(RPFs)), drop=FALSE] -
       betahat[, seq.int(ncol(betahat))[-seq.int(ncol(RPFs))], drop=FALSE]
     
@@ -97,13 +99,8 @@ translationalEfficiency <- function(x, window,
       simplify = FALSE)
     TE <- lapply(fit, function(.e) .e$result$PosteriorMean)
     x[['TE']] <- do.call(cbind, TE)
+    if(!log2) x[['TE']] <- 2^x[['TE']] - pseudocount
     x
-  }
-  normByLib <- function(x){
-    xLibSize <- lapply(x, sum, na.rm=TRUE)
-    xLibSize <- vapply(xLibSize, sum, FUN.VALUE = 0.0, na.rm=TRUE)
-    xLibFactor <- mean(xLibSize)/xLibSize
-    x <- mapply(x, xLibFactor, FUN=`*`, SIMPLIFY = FALSE)
   }
   if(missing(window)){
     if(length(dim(RPFs))!=2 | length(dim(mRNA))!=2){
@@ -118,15 +115,27 @@ translationalEfficiency <- function(x, window,
     if(length(id)==0){return(NULL)}
     x[["RPFs"]] <- RPFs[id, RPFsampleOrder, drop=FALSE]
     x[["mRNA"]] <- mRNA[id, mRNAsampleOrder, drop=FALSE]
-    if(log2){
-      x[["TE"]] <- log2(x[["RPFs"]]+pseudocount) - log2(x[["mRNA"]]+pseudocount)
-    }else{
-      x[["TE"]] <- (x[["RPFs"]]+pseudocount)/(x[["mRNA"]]+pseudocount)
-    }
     if(shrink){
       x <- shrinkTE(x, ...)
+    }else{
+      if(normByLibSize){
+        normByLib <- function(x){
+          xLibSize <- colSums(x, na.rm=TRUE)
+          xLibFactor <- mean(xLibSize)/xLibSize
+          x <- t(t(x)*xLibFactor)
+        }
+        RPFs_mRNA <- normByLib(cbind(x[["RPFs"]], x[["mRNA"]]))
+        x[["RPFs"]] <- RPFs_mRNA[, seq.int(ncol(x[["RPFs"]])), drop=FALSE]
+        x[["mRNA"]] <- RPFs_mRNA[, seq.int(ncol(RPFs_mRNA))[
+          -seq.int(ncol(x[["RPFs"]]))], drop=FALSE]
+        rm(RPFs_mRNA)
+      }
+      if(log2){
+        x[["TE"]] <- log2(x[["RPFs"]]+pseudocount) - log2(x[["mRNA"]]+pseudocount)
+      }else{
+        x[["TE"]] <- (x[["RPFs"]]+pseudocount)/(x[["mRNA"]]+pseudocount)
+      }
     }
-    return(x)
   }else{
     if(!is(RPFs, "cvgd") | !is(mRNA, "cvgd")){
       stop("x must be output of coverageDepth and must contain RPFs and mRNA.")
@@ -142,6 +151,12 @@ translationalEfficiency <- function(x, window,
            the length of RPFs.")
     }
     if(normByLibSize){
+      normByLib <- function(x){
+        xLibSize <- lapply(x, sum, na.rm=TRUE)
+        xLibSize <- vapply(xLibSize, sum, FUN.VALUE = 0.0, na.rm=TRUE)
+        xLibFactor <- mean(xLibSize)/xLibSize
+        x <- mapply(x, xLibFactor, FUN=`*`, SIMPLIFY = FALSE)
+      }
       RPFs_mRNA <- normByLib(c(RPFs, mRNA))
       RPFs <- RPFs_mRNA[seq_along(RPFs)]
       mRNA <- RPFs_mRNA[seq_along(RPFs_mRNA)[-seq_along(RPFs)]]
@@ -200,6 +215,18 @@ translationalEfficiency <- function(x, window,
     x[["RPFs"]] <- do.call(cbind, lapply(cvg, `[[`, i="RPFs"))
     x[["mRNA"]] <- do.call(cbind, lapply(cvg, `[[`, i="mRNA"))
     x[["TE"]] <- do.call(cbind, lapply(cvg, `[[`, i="ratios"))
-    return(x)
   }
+  if(normByRNAseqLevel){
+    if(log2){
+      message('normByRNAseqLevel does not support log2 transformed value.')
+      return(x)
+    }
+    if (!requireNamespace("vsn", quietly=TRUE)) {
+      stop("normByRNAseqLevel requires installing the CRAN package 'vsn'")
+    }
+    x[["ori_TE"]] <- x[["TE"]]
+    x[["TE"]] <- suppressMessages(exprs(vsn::vsn2(x[["TE"]])))
+    x[["TE"]] <- t(t(x[['TE']])-colMeans(x[['TE']]))
+  }
+  return(x)
 }

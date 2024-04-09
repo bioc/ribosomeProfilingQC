@@ -4,14 +4,14 @@
 \alias{normBy}
 \title{Normalization by edgeR, DESeq2 or RUVSeq}
 \usage{
-normBy(counts, method = c("edgeR", "DESeq2", "RUVs"), ...)
+normBy(counts, method = c("edgeR", "DESeq2", "RUVs", "fpkm"), ...)
 }
 \arguments{
 \item{counts}{Output of \link{countReads}}
 
 \item{method}{Character(1L) to indicate the method for normalization.}
 
-\item{...}{parameters will be passed to \link{normByRUVs}}
+\item{...}{parameters will be passed to \link{normByRUVs} or \link{getFPKM}}
 }
 \value{
 Normalized counts list
