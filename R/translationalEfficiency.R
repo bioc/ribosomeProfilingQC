@@ -36,18 +36,52 @@ translationalEfficiency <- function(x, window,
                                     shrink=FALSE,
                                     ...){
   if(!is.list(x)){
-    stop("x must be output of getFPKM, normByRUVs or coverageDepth.")
+    stop("x must be output of countReads, getFPKM, normByRUVs or coverageDepth.")
   }
   if(!all(c("RPFs", "mRNA") %in% names(x))){
-    stop("x must be output of getFPKM, normByRUVs or
+    stop("x must be output of countReads, getFPKM, normByRUVs or
          coverageDepth and must contain RPFs and mRNA.")
   }
   RPFs <- x[["RPFs"]]
   mRNA <- x[["mRNA"]]
-  shrinkTE <- function(betahat, ...){
+  shrinkTE <- function(x, ...){
+    RPFs <- if(!is.null(x[["RPFsRawCounts"]])){
+      x[["RPFsRawCounts"]]
+    }else{
+      x[["RPFs"]]
+    }
+    mRNA <- if(!is.null(x[["mRNARawCounts"]])){
+      x[["mRNARawCounts"]]
+    }else{
+      x[["mRNA"]]
+    }
+    
+    if(!all(RPFs==round(RPFs)) &&
+       !all(mRNA==round(mRNA))){
+      stop('raw counts is missing.')
+    }
     if (!requireNamespace("ashr", quietly=TRUE)) {
       stop("type='ashr' requires installing the CRAN package 'ashr'")
     }
+    
+    if (!requireNamespace("DESeq2", quietly=TRUE)) {
+      stop("method='DESeq2' requires installing the CRAN package 'DESeq2'")
+    }
+    cd <- data.frame(condition=factor(c(rep('RPFs', ncol(RPFs)), 
+                                        rep('mRNA', ncol(mRNA)))))
+    design <- as.formula('~condition')
+    countData <- cbind(RPFs,
+                       mRNA)
+    mode(countData) <- 'integer'
+    dds <- DESeq2::DESeqDataSetFromMatrix(countData=countData,
+                                          colData = cd,
+                                          design = design)
+    dds <- DESeq2::DESeq(dds)
+    res <- DESeq2::results(dds, contrast=c('condition', 'RPFs', 'mRNA'))
+    sebetahat <- res$lfcSE
+    betahat <- log2(DESeq2::counts(dds, normalized=TRUE) + 1)
+    betahat <- betahat[, seq.int(ncol(RPFs)), drop=FALSE] -
+      betahat[, seq.int(ncol(betahat))[-seq.int(ncol(RPFs))], drop=FALSE]
     
     message("using 'ashr' for TE shrinkage. ",
             "If used in published research, ",
@@ -57,14 +91,13 @@ translationalEfficiency <- function(x, window,
             "https://doi.org/10.1093/biostatistics/kxw041")
     stopifnot('TE is not a matrix with 2 dimension. Please report this bug.'=
                 length(dim(betahat))==2)
-    betaN <- sqrt(ncol(betahat))
-    sebetahat <- apply(betahat, 1, function(.e) sd(.e)/betaN)
     fit <- apply(betahat, 2, function(.e){
       ashr::ash(.e, sebetahat,
                 mixcompdist="normal", method="shrink", ...)},
       simplify = FALSE)
     TE <- lapply(fit, function(.e) .e$result$PosteriorMean)
-    TE <- do.call(cbind, TE)
+    x[['TE']] <- do.call(cbind, TE)
+    x
   }
   normByLib <- function(x){
     xLibSize <- lapply(x, sum, na.rm=TRUE)
@@ -91,7 +124,7 @@ translationalEfficiency <- function(x, window,
       x[["TE"]] <- (x[["RPFs"]]+pseudocount)/(x[["mRNA"]]+pseudocount)
     }
     if(shrink){
-      x[["TE"]] <- shrinkTE(x[["TE"]], ...)
+      x <- shrinkTE(x, ...)
     }
     return(x)
   }else{
@@ -109,8 +142,10 @@ translationalEfficiency <- function(x, window,
            the length of RPFs.")
     }
     if(normByLibSize){
-      mRNA <- normByLib(mRNA)
-      RPFs <- normByLib(RPFs)
+      RPFs_mRNA <- normByLib(c(RPFs, mRNA))
+      RPFs <- RPFs_mRNA[seq_along(RPFs)]
+      mRNA <- RPFs_mRNA[seq_along(RPFs_mRNA)[-seq_along(RPFs)]]
+      rm(RPFs_mRNA)
     }
     window <- window[1]
     if(round(window)!=window | window < 3){
@@ -165,9 +200,6 @@ translationalEfficiency <- function(x, window,
     x[["RPFs"]] <- do.call(cbind, lapply(cvg, `[[`, i="RPFs"))
     x[["mRNA"]] <- do.call(cbind, lapply(cvg, `[[`, i="mRNA"))
     x[["TE"]] <- do.call(cbind, lapply(cvg, `[[`, i="ratios"))
-    if(shrink){
-      x[["TE"]] <- shrinkTE(x[["TE"]], ...)
-    }
     return(x)
   }
 }

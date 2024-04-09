@@ -682,8 +682,8 @@ It shows a higher value in lowly expressed transcripts
 and a low value in highly expressed transcripts.
 
 ```{r plotTE, class.source='vig'}
-plotTE(TE, sample=2, xaxis="mRNA", log2=TRUE, pch=16, cex=.5) + theme_classic()
-#plotTE(TE, sample=2, xaxis="RPFs", log2=TRUE, pch=16, cex=.5)
+plotTE(TE, sample=2, xaxis="mRNA", log2=TRUE)
+#plotTE(TE, sample=2, xaxis="RPFs", log2=TRUE)
 ```
 
 This issue can be fixed by calculating the maximum value (TE max) in the most
@@ -693,8 +693,8 @@ Please note that the normalization method for TE max is not FPKM any more.
 ```{r plotTE90, class.source='vig'}
 cvgs <- coverageDepth(RPFs, RNAs, txdb)
 TE90 <- translationalEfficiency(cvgs, window = 90, normByLibSize=TRUE)
-plotTE(TE90, sample=2, xaxis="mRNA", log2=TRUE, pch=16, cex=.5)
-plotTE(TE90, sample=2, xaxis="RPFs", log2=TRUE, pch=16, cex=.5)
+plotTE(TE90, sample=2, xaxis="mRNA", log2=TRUE)
+plotTE(TE90, log2=TRUE)
 ```
 
 Above examples are TE90 for CDS region. Following codes show how to 
@@ -709,8 +709,8 @@ cvgs.utr3 <- coverageDepth(RPFs, RNAs, txdb, region="utr3")
 TE90.utr3 <- translationalEfficiency(cvgs.utr3, window = 90)
 ## Following code will plot the TE90 for 3'UTR regions.
 ## Try it by removing the '#'. 
-#plotTE(TE90.utr3, sample=2, xaxis="mRNA", log2=TRUE, pch=16, cex=.5)
-#plotTE(TE90.utr3, sample=2, xaxis="RPFs", log2=TRUE, pch=16, cex=.5)
+#plotTE(TE90.utr3, sample=2, xaxis="mRNA", log2=TRUE)
+#plotTE(TE90.utr3, sample=2, xaxis="RPFs", log2=TRUE)
 ```
 
 
@@ -826,7 +826,6 @@ pseudogene <-
 danrer10.annotations <- list(protein=unique(protein), 
                              mito=unique(mito),
                              lincRNA=unique(lincRNA),
-                             sncRNA=unique(sncRNA),
                              pseudogene=unique(pseudogene))
 ```
 

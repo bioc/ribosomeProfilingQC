@@ -6,9 +6,10 @@
 #' @param xaxis What to plot for x-axis.
 #' @param removeZero Remove the 0 values from plots.
 #' @param log2 Do log2 transform or not.
+#' @param theme Theme for ggplot2.
 #' @param type,margins,... Parameters pass to ggMarginal
-#' @return A ggplot object.
-#' @importFrom ggplot2 ggplot geom_point geom_text .data facet_wrap
+#' @return A ggExtraPlot object.
+#' @importFrom ggplot2 ggplot geom_point geom_text .data facet_wrap theme_classic
 #' @importFrom ggExtra ggMarginal
 #' @importFrom stats as.formula coef na.omit
 #' @export
@@ -25,6 +26,7 @@
 
 plotTE <- function(TE, sample, xaxis=c("mRNA", "RPFs"),
                    removeZero=TRUE, log2=TRUE,
+                   theme = theme_classic(),
                    type = 'histogram', margins = 'y',
                    ...){
   if(!is.list(TE)){
@@ -33,6 +35,7 @@ plotTE <- function(TE, sample, xaxis=c("mRNA", "RPFs"),
   if(!any(c("RPFs", "mRNA", "TE") %in% names(TE))){
     stop("TE must be output of translationalEfficiency.")
   }
+  stopifnot(is(theme, 'theme'))
   xaxis <- match.arg(xaxis)
   mRNA <- TE$mRNA
   RPFs <- TE$RPFs
@@ -87,7 +90,7 @@ plotTE <- function(TE, sample, xaxis=c("mRNA", "RPFs"),
   }
   p <- ggplot(df, aes(.data$x, .data$TE)) + geom_point() + 
     xlab(xlab) + ylab(ylab) +
-    geom_smooth(method="lm", se=TRUE)
+    geom_smooth(method="lm", se=TRUE) + theme
   p <- p + geom_text(data=lm_eqn(df),
                      aes(x=-Inf, y = Inf, label=.data$label),
                      hjust = 0, vjust = 1,

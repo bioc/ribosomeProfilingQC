@@ -10,6 +10,7 @@ plotTE(
   xaxis = c("mRNA", "RPFs"),
   removeZero = TRUE,
   log2 = TRUE,
+  theme = theme_classic(),
   type = "histogram",
   margins = "y",
   ...
@@ -26,10 +27,12 @@ plotTE(
 
 \item{log2}{Do log2 transform or not.}
 
+\item{theme}{Theme for ggplot2.}
+
 \item{type, margins, ...}{Parameters pass to ggMarginal}
 }
 \value{
-A ggplot object.
+A ggExtraPlot object.
 }
 \description{
 Scatterplot of RNA/RPFs level compared to the
