@@ -13,7 +13,6 @@ translationalEfficiency(
   log2 = FALSE,
   normByLibSize = FALSE,
   shrink = FALSE,
-  normByRNAseqLevel = FALSE,
   ...
 )
 }
@@ -37,8 +36,6 @@ the coverage will be normalized by library size.}
 
 \item{shrink}{Shrink the TE or not.}
 
-\item{normByRNAseqLevel}{Normalization the TE by RNAseq expression level or not.}
-
 \item{...}{Parameters will be passed to \code{ash} function from \code{ashr}.}
 }
 \value{
@@ -58,6 +55,6 @@ RNAs <- dir(path, "mRNA.*?\\\\.[12].bam$", full.names=TRUE)
 gtf <- file.path(path, "Danio_rerio.GRCz10.91.chr1.gtf.gz")
 cnts <- countReads(RPFs, RNAs, gtf, level="gene")
 fpkm <- getFPKM(cnts)
-te <- translationalEfficiency(fpkm, normByRNAseqLevel=TRUE)
+te <- translationalEfficiency(fpkm)
 }
 }

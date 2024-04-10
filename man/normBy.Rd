@@ -4,7 +4,7 @@
 \alias{normBy}
 \title{Normalization by edgeR, DESeq2 or RUVSeq}
 \usage{
-normBy(counts, method = c("edgeR", "DESeq2", "RUVs", "fpkm"), ...)
+normBy(counts, method = c("edgeR", "DESeq2", "RUVs", "fpkm", "vsn"), ...)
 }
 \arguments{
 \item{counts}{Output of \link{countReads}}
@@ -24,5 +24,5 @@ path <- system.file("extdata", package="ribosomeProfilingQC")
 cnts <- readRDS(file.path(path, "cnts.rds"))
 norm <- normBy(cnts, method = 'edgeR')
 norm2 <- normBy(cnts, method = 'DESeq2')
-
+norm3 <- normBy(cnts, 'vsn')
 }

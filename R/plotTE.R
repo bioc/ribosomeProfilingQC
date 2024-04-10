@@ -90,7 +90,7 @@ plotTE <- function(TE, sample, xaxis=c("mRNA", "RPFs"),
   }
   p <- ggplot(df, aes(.data$x, .data$TE)) + geom_point() + 
     xlab(xlab) + ylab(ylab) +
-    geom_smooth(method="lm", se=TRUE) + theme
+    geom_smooth(method="lm", formula=as.formula('y ~ x'), se=TRUE) + theme
   p <- p + geom_text(data=lm_eqn(df),
                      aes(x=-Inf, y = Inf, label=.data$label),
                      hjust = 0, vjust = 1,

@@ -694,7 +694,6 @@ Please note that the normalization method for TE max is not FPKM any more.
 cvgs <- coverageDepth(RPFs, RNAs, txdb)
 TE90 <- translationalEfficiency(cvgs, window = 90, normByLibSize=TRUE)
 plotTE(TE90, sample=2, xaxis="mRNA", log2=TRUE)
-plotTE(TE90, log2=TRUE)
 ```
 
 Above examples are TE90 for CDS region. Following codes show how to 
@@ -713,6 +712,14 @@ TE90.utr3 <- translationalEfficiency(cvgs.utr3, window = 90)
 #plotTE(TE90.utr3, sample=2, xaxis="RPFs", log2=TRUE)
 ```
 
+We can also try a different method to fix that issue by normalization the counts
+of RPFs and RNAs by different methods but not FPKM.
+
+```{r, class.source='vig'}
+cnts_normByEdgeR <- normBy(cnts, method = 'edgeR')
+TE_edgeR <- translationalEfficiency(cnts_normByEdgeR)
+plotTE(TE_edgeR)
+```
 
 #### Ribosome Release Score (RRS)
 

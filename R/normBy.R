@@ -10,8 +10,8 @@
 #' cnts <- readRDS(file.path(path, "cnts.rds"))
 #' norm <- normBy(cnts, method = 'edgeR')
 #' norm2 <- normBy(cnts, method = 'DESeq2')
-#' 
-normBy <- function(counts, method = c('edgeR', 'DESeq2', 'RUVs', 'fpkm'),
+#' norm3 <- normBy(cnts, 'vsn')
+normBy <- function(counts, method = c('edgeR', 'DESeq2', 'RUVs', 'fpkm', 'vsn'),
                    ...){
   if(!any(c("RPFs", "mRNA") %in% names(counts))){
     stop("counts must be output of coutReads.")
@@ -22,22 +22,50 @@ normBy <- function(counts, method = c('edgeR', 'DESeq2', 'RUVs', 'fpkm'),
          DESeq2 = normByDETools(counts, FUN=DESeq2normHelper),
          RUVs = normByRUVs(counts, ...),
          fpkm = getFPKM(counts, ...),
-         ashr = )
+         vsn = normByDETools(counts, FUN=vsnNormHelper))
   counts
 }
 
 normByDETools <- function(counts, FUN){
   stopifnot(is.function(FUN))
-  if("RPFs" %in% names(counts)){
-    counts$RPFsRawCounts <- counts$RPFs
-    RPFs <- counts$RPFs
-    counts$RPFs <- FUN(RPFs)
+  if(all(c("RPFs", 'mRNA') %in% names(counts))){
+    if("RPFsRawCounts" %in% names(counts)){
+      counts$RPFs <- counts$RPFsRawCounts
+    }else{
+      counts$RPFsRawCounts <- counts$RPFs
+    }
+    if("mRNARawCounts" %in% names(counts)){
+      counts$mRNA <- counts$mRNARawCounts
+    }else{
+      counts$mRNARawCounts <- counts$mRNA
+    }
+    x <- cbind(counts$RPFs, counts$mRNA)
+    colnames(x) <- rep(c('RPFs', 'mRNA'), each=4)
+    x <- FUN(x)
+    RPFs <- x[, seq.int(ncol(counts$RPFs))]
+    colnames(RPFs) <- colnames(counts$RPFs)
+    counts$RPFs <- RPFs
+    mRNA <- x[, -seq.int(ncol(counts$RPFs))]
+    colnames(mRNA) <- colnames(counts$mRNA)
+    counts$mRNA <- mRNA
+    return(counts)
+  }
+  if("RPFsRawCounts" %in% names(counts)){
+    counts$RPFs <- FUN(counts$RPFsRawCounts)
+  }else{
+    if("mRNA" %in% names(counts)){
+      counts$mRNARawCounts <- counts$mRNA
+      counts$mRNA <- FUN(counts$mRNA)
+    }
   }
   
-  if("mRNA" %in% names(counts)){
-    counts$mRNARawCounts <- counts$mRNA
-    mRNA <- counts$mRNA
-    counts$mRNA <- FUN(mRNA)
+  if("RPFsRawCounts" %in% names(counts)){
+    counts$RPFs <- FUN(counts$RPFsRawCounts)
+  }else{
+    if("mRNA" %in% names(counts)){
+      counts$mRNARawCounts <- counts$mRNA
+      counts$mRNA <- FUN(counts$mRNA)
+    }
   }
   counts
 }
@@ -64,4 +92,11 @@ DESeq2normHelper <- function(x){
   dds <- DESeq2::estimateSizeFactors(dds)
   cnt <- DESeq2::counts(dds, normalized=TRUE)
   return(cnt)
+}
+
+vsnNormHelper <- function(x){
+  if (!requireNamespace("vsn", quietly=TRUE)) {
+    stop("method='vsn' requires installing the CRAN package 'vsn'")
+  }
+  suppressMessages(Biobase::exprs(vsn::vsn2(x)))
 }

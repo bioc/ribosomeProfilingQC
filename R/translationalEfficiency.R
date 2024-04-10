@@ -14,7 +14,6 @@
 #' If window size is provided and normByLibSize is set to TRUE,
 #' the coverage will be normalized by library size.
 #' @param shrink Shrink the TE or not.
-#' @param normByRNAseqLevel Normalization the TE by RNAseq expression level or not.
 #' @param ... Parameters will be passed to \code{ash} function from \code{ashr}.
 #' @return A list with RPFs, mRNA levels and TE as a matrix with
 #' translational efficiency
@@ -28,14 +27,13 @@
 #' gtf <- file.path(path, "Danio_rerio.GRCz10.91.chr1.gtf.gz")
 #' cnts <- countReads(RPFs, RNAs, gtf, level="gene")
 #' fpkm <- getFPKM(cnts)
-#' te <- translationalEfficiency(fpkm, normByRNAseqLevel=TRUE)
+#' te <- translationalEfficiency(fpkm)
 #' }
 translationalEfficiency <- function(x, window,
                                     RPFsampleOrder, mRNAsampleOrder,
                                     pseudocount=1, log2=FALSE,
                                     normByLibSize=FALSE,
                                     shrink=FALSE,
-                                    normByRNAseqLevel=FALSE,
                                     ...){
   if(!is.list(x)){
     stop("x must be output of countReads, getFPKM, normByRUVs or coverageDepth.")
@@ -215,18 +213,6 @@ translationalEfficiency <- function(x, window,
     x[["RPFs"]] <- do.call(cbind, lapply(cvg, `[[`, i="RPFs"))
     x[["mRNA"]] <- do.call(cbind, lapply(cvg, `[[`, i="mRNA"))
     x[["TE"]] <- do.call(cbind, lapply(cvg, `[[`, i="ratios"))
-  }
-  if(normByRNAseqLevel){
-    if(log2){
-      message('normByRNAseqLevel does not support log2 transformed value.')
-      return(x)
-    }
-    if (!requireNamespace("vsn", quietly=TRUE)) {
-      stop("normByRNAseqLevel requires installing the CRAN package 'vsn'")
-    }
-    x[["ori_TE"]] <- x[["TE"]]
-    x[["TE"]] <- suppressMessages(Biobase::exprs(vsn::vsn2(x[["TE"]])))
-    x[["TE"]] <- t(t(x[['TE']])-colMeans(x[['TE']]))
   }
   return(x)
 }
