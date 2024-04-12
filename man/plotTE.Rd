@@ -25,7 +25,7 @@ plotTE(
 
 \item{removeZero}{Remove the 0 values from plots.}
 
-\item{log2}{Do log2 transform or not.}
+\item{log2}{Do log2 transform for TE or not.}
 
 \item{theme}{Theme for ggplot2.}
 

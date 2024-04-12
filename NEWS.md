@@ -1,3 +1,7 @@
+# CHANGES IN VERSION 1.13.15
+
+* add normalizeTEbyLoess functions. 
+
 # CHANGES IN VERSION 1.13.14
 
 * simplify the normBy and translationalEfficiency functions. 

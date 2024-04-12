@@ -81,7 +81,7 @@ translationalEfficiency <- function(x, window,
     sebetahat <- res$lfcSE
     betahat <- log2(DESeq2::counts(dds, normalized=TRUE) + pseudocount)
     betahat <- betahat[, seq.int(ncol(RPFs)), drop=FALSE] -
-      betahat[, seq.int(ncol(betahat))[-seq.int(ncol(RPFs))], drop=FALSE]
+      betahat[, -seq.int(ncol(RPFs)), drop=FALSE]
     
     message("using 'ashr' for TE shrinkage. ",
             "If used in published research, ",

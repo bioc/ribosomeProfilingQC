@@ -5,7 +5,7 @@
 #' @param sample Sample names to plot.
 #' @param xaxis What to plot for x-axis.
 #' @param removeZero Remove the 0 values from plots.
-#' @param log2 Do log2 transform or not.
+#' @param log2 Do log2 transform for TE or not.
 #' @param theme Theme for ggplot2.
 #' @param type,margins,... Parameters pass to ggMarginal
 #' @return A ggExtraPlot object.
@@ -67,10 +67,10 @@ plotTE <- function(TE, sample, xaxis=c("mRNA", "RPFs"),
   df$sample <- colnames(TE)[df$sample]
   xlab <- paste(xaxis, "level")
   ylab <- "Translational Efficiency"
+  df$x <- log2(df$x)
+  xlab <- paste('log2 transformed', xlab)
   if(log2){
-    df$x <- log2(df$x)
     df$TE <- log2(df$TE)
-    xlab <- paste('log2 transformed', xlab)
     ylab <- paste('log2 transformed', ylab)
   }
 

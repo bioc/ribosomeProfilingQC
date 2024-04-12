@@ -721,6 +721,13 @@ TE_edgeR <- translationalEfficiency(cnts_normByEdgeR)
 plotTE(TE_edgeR)
 ```
 
+Additional method is that normalize the log2 transformed TE with mRNA counts.
+```{r, class.source='vig'}
+TE.log2_norm <- normalizeTEbyLoess(TE)
+## please note that output is log2 transformed TE.
+plotTE(TE.log2_norm, log2 = FALSE)
+```
+
 #### Ribosome Release Score (RRS)
 
 RRS is calculated as the ratio of RPFs (normalized by RNA-seq reads) in 
