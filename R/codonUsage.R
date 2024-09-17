@@ -16,6 +16,7 @@
 codonUsage <- function(reads, start=TRUE, genome){
   stopifnot(is(reads, "GRanges"))
   stopifnot(is.logical(start))
+  stopifnot(inherits(genome, c("DNAStringSet", "BSgenome")))
   if(length(reads$tx_name)!=length(reads) ||
      length(reads$position)!=length(reads) ||
      length(reads$posToStop)!=length(reads) ||

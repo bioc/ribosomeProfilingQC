@@ -133,6 +133,12 @@ library(BSgenome.Mmusculus.UCSC.mm10)
 genome <- Mmusculus
 ```
 
+If you are having trouble creating or retrieving a `BSgenome`,
+a `DNAStringSet` object has also been acceptable since version 1.17.1.
+
+```{r, eval=FALSE}
+genome <- Biostrings::readDNAStringSet('filepath/to/the/genome/fasta/file')
+```
 
 ## Prepare annotaiton CDS
 
@@ -453,7 +459,7 @@ ORFscore <- getORFscore(pc.sub)
 # Bad case
 
 Here, we show ribosome footprinting data that is poor quality data and 
-should not bed used for downstream analyses. 
+should not be used for downstream analyses. 
 
 ```{r badStrandPlot, fig.width=2,fig.height=3, class.source='vig'}
 bamfilename <- system.file("extdata", "RPF.chr1.bad.bam",

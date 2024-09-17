@@ -39,7 +39,7 @@ codonBias <- function(RPFs, gtf, genome,
   stopifnot(is.logical(summary))
   summary <- summary[1]
   stopifnot(is.character(gtf)||is(gtf, "TxDb"))
-  stopifnot(is(genome, 'BSgenome'))
+  stopifnot(inherits(genome, c("DNAStringSet", "BSgenome")))
   anchor <- match.arg(anchor, choices = c("5end", "3end"))
   stopifnot(is.character(RPFs))
   stopifnot(is.numeric(readsLen))
@@ -74,7 +74,7 @@ codonBias <- function(RPFs, gtf, genome,
       pc <- pc[pc$position>=0 & pc$posToStop + 3 >= pc$Psite]
     }
     
-    pc[strand(pc)=='-']$seq <- reverseComplement(pc[strand(pc)=='-']$seq)
+    #the sequence in bam file should be the raw reads, no need to do reverseComplement.
     pc$char <- substring(pc$seq, ifelse(pc$Psite>pc$position, pc$Psite-pc$position, 1))
     pcs <- ifelse(pc$Psite>pc$position, 0, pc$position-pc$Psite+1)
     pc$ref <- substr(refSeq[pc$tx_name],

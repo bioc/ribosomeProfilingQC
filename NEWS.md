@@ -1,3 +1,7 @@
+# CHANGES IN VERSION 1.17.1
+
+* allow DNAStringSet for genome. 
+
 # CHANGES IN VERSION 1.13.15
 
 * add normalizeTEbyLoess functions. 

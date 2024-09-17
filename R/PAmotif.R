@@ -28,7 +28,7 @@ PAmotif <- function(reads, genome, plot=TRUE, ignore.seqlevelsStyle=FALSE){
      length(reads$gene_id)!=length(reads)){
     stop("reads must be a result of assignReadingFrame or shiftReadsByFrame")
   }
-  stopifnot(is(genome, "BSgenome"))
+  stopifnot(inherits(genome, c("DNAStringSet", "BSgenome")))
   reads <- fixSeqlevelsStyle(reads, genome, ignore.seqlevelsStyle)
   reads <- promoters(reads, upstream = 6, downstream = 12)
   seq <- getSeq(genome, reads)

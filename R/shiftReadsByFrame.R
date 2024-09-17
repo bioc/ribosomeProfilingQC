@@ -44,7 +44,7 @@ shiftReadsByFrame <- function(reads, txdb, ignore.seqlevelsStyle=FALSE){
   end(reads[nstr]) <- start(reads[nstr]) + reads[nstr]$readingFrame
   start(reads[nstr]) <- end(reads[nstr])
   reads[nstr]$position <- reads[nstr]$position - reads[nstr]$readingFrame
-  reads[nstr]$position <- reads[nstr]$position + reads[nstr]$readingFrame
+  reads[nstr]$posToStop <- reads[nstr]$posToStop + reads[nstr]$readingFrame
   reads[nstr]$Psite <- reads[nstr]$Psite - reads[nstr]$readingFrame
   width(reads) <- 1
   reads[!is.na(reads$readingFrame)]$readingFrame <- 0

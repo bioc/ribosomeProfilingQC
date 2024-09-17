@@ -19,7 +19,7 @@
 #' @importFrom BSgenome getSeq
 #' @importFrom Rsamtools ScanBamParam scanBamFlag
 #' @importFrom GenomicAlignments readGAlignments qwidth njunc narrow
-#' @importFrom Biostrings vmatchPattern
+#' @importFrom Biostrings vmatchPattern DNAStringSet
 #' @importFrom BiocGenerics table
 #' @importFrom methods as is
 #' @importFrom XVector subseq
@@ -57,7 +57,7 @@ estimatePsite <- function(bamfile, CDS, genome, anchor='5end',
      length(CDS$gene_id)!=length(CDS)){
     stop("CDS must be output of prepareCDS")
   }
-  stopifnot(is(genome, "BSgenome"))
+  stopifnot(inherits(genome, c("DNAStringSet", "BSgenome")))
   param <-
     ScanBamParam(what=c("qwidth"),
                  tag=character(0),

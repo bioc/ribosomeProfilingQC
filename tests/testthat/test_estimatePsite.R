@@ -1,6 +1,7 @@
-txdb <- makeTxDbFromGFF(system.file("extdata",
-                                    "Danio_rerio.GRCz10.91.chr1.gtf.gz",
-                                    package="ribosomeProfilingQC"),
+gtf <- system.file("extdata",
+                   "Danio_rerio.GRCz10.91.chr1.gtf.gz",
+                   package="ribosomeProfilingQC")
+txdb <- makeTxDbFromGFF(gtf,
                         organism = "Danio rerio",
                         chrominfo = seqinfo(Drerio)["chr1"],
                         taxonomyId = 7955)
@@ -11,6 +12,24 @@ samples <- character(0)
 yieldSize <- 10000000
 
 possiblePsites <- 13 #c(12, 13, 14)
+Drerio_chr1 <- getSeq(Drerio, as(seqinfo(Drerio)["chr1"], 'GRanges'))
+
+bamfilename13 <- tempfile(tmpdir = tmpbam, fileext = ".bam")
+test_that("simulateRPF works not correct for DNAStringSet", {
+  sample <- sub(".bam", "", basename(bamfilename13))
+  reads <- simulateRPF(txdb, tmpbam, samples=sample, genome=Drerio_chr1,
+                       readsPerSample = 1e4, psite = 13,
+                       frame0=.90, frame1=.05, frame2=.05,
+                       includeReadsSeq = TRUE)
+})
+test_that("codonBias works not correct", {
+    cb <- codonBias(bamfilename13, gtf=gtf, genome=Drerio_chr1, bestpsite = 13)
+    reads.vs.ref <- cb$reads[, -seq.int(3)]/cb$reference[, -seq.int(3)]
+    expect_equal(mean(reads.vs.ref), 1, tolerance = 0.01)
+    expect_true(sd(reads.vs.ref)<0.05)
+    p <- t.test(cb$reads[, 4], cb$reference[, 4])$p.value
+    expect_true(p>0.99)
+})
 
 for(psite in possiblePsites){
   bamfilename <- tempfile(tmpdir = tmpbam, fileext = ".bam")
@@ -28,6 +47,9 @@ names(bamfile) <- possiblePsites
 test_that("estimatePsite works not correct", {
   for(psite in possiblePsites){
     bestpsite <- estimatePsite(bamfile[[as.character(psite)]], CDS, Drerio)
+    expect_equal(bestpsite, psite)
+    ## test for DNAStringSet
+    bestpsite <- estimatePsite(bamfile[[as.character(psite)]], CDS, Drerio_chr1)
     expect_equal(bestpsite, psite)
     ## from 3'end
     bestpsite <- estimatePsite(bamfile[[as.character(psite)]], CDS, Drerio, anchor='3end')
@@ -64,7 +86,6 @@ test_that("strandPlot works not correct", {
   }
 })
 
-
 pcs <- lapply(pcs, assignReadingFrame, CDS=CDS)
 
 test_that("assignReadingFrame works not correct", {
@@ -95,13 +116,20 @@ test_that("readsDistribution works not correct", {
 })
 
 
-# test_that("codonUsage works not correct", {
-#   for(psite in possiblePsites){
-#     startcodon <- codonUsage(pcs[[as.character(psite)]],
-#                              start = TRUE, genome = Drerio)
-#     expect_true(names(startcodon)[1] == "ATG")
-#     stopcodon <- codonUsage(pcs[[as.character(psite)]],
-#                             start = FALSE, genome = Drerio)
-#     expect_true(names(stopcodon)[1] %in% c("TAG", "TAA", "TGA"))
-#   }
-# })
+test_that("codonUsage works not correct", {
+  for(psite in possiblePsites){
+    startcodon <- codonUsage(pcs[[as.character(psite)]],
+                             start = TRUE, genome = Drerio)
+    expect_true(names(startcodon)[1] == "ATG")
+    stopcodon <- codonUsage(pcs[[as.character(psite)]],
+                            start = FALSE, genome = Drerio)
+    expect_true(names(stopcodon)[1] %in% c("TAG", "TAA", "TGA"))
+    ## test for DNAStringSet
+    startcodon <- codonUsage(pcs[[as.character(psite)]],
+                             start = TRUE, genome = Drerio_chr1)
+    expect_true(names(startcodon)[1] == "ATG")
+    stopcodon <- codonUsage(pcs[[as.character(psite)]],
+                            start = FALSE, genome = Drerio_chr1)
+    expect_true(names(stopcodon)[1] %in% c("TAG", "TAA", "TGA"))
+  }
+})

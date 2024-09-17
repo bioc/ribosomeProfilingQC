@@ -51,7 +51,7 @@ simulateRPF <- function(txdb, outPath, genome, samples = 6,
   stopifnot(psite<readsLen)
   stopifnot(size>0)
   mis_genome <- missing(genome)
-  if(!mis_genome) stopifnot(is(genome, "BSgenome"))
+  if(!mis_genome) stopifnot(inherits(genome, c("DNAStringSet", "BSgenome")))
   stopifnot(is(DEregions, "GRanges"))
   ol_DE <- findOverlaps(DEregions, cds, type = "within")
   if(any(!seq_along(DEregions) %in% queryHits(ol_DE))){
