@@ -1,3 +1,7 @@
+# CHANGES IN VERSION 1.19.1
+
+* Update email address. 
+
 # CHANGES IN VERSION 1.17.1
 
 * allow DNAStringSet for genome. 
